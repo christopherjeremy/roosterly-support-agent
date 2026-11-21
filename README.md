@@ -19,8 +19,8 @@ cp .env.example .env                       # helpdesk key, email, name; free Gem
 
 1. **Dutch directly, checked in English.** One Gemini call per ticket returns a schema-validated decision, the reply
    in the customer's language, and English versions of ticket and reply. No translation step, so no meaning lost
-   twice; since the English comes from the same model, I verified it against Nordavo's labels, translator spot
-   checks and hand-written probes. `gemini-3.5-flash-lite` (free) was chosen by measurement: it matched or beat
+   twice. The English comes from the same model, so the decisions are checked against Nordavo's labels and
+   hand-written probe tickets; an independent translation check is not done yet (see below). `gemini-3.5-flash-lite` (free) was chosen by measurement: it matched or beat
    `gemini-3.6-flash` on every eval field at ~2 s instead of ~35 s per ticket, within quota.
 2. **Safety in code, one-directional.** Card numbers, IBANs, CVCs and expiry dates are masked before the model sees
    the ticket. Afterwards, code can turn a reply into a handoff, never the reverse: payment details, P1, a client
@@ -33,8 +33,7 @@ cp .env.example .env                       # helpdesk key, email, name; free Gem
 only if every part is covered; otherwise the handoff note gives the open issue, then the covered answer. Follow-ups,
 unexplained bugs (also cosmetic), unexplained charges, payment details and every P1 go to a human.
 
-**AI tools.** Built with Claude Code as pair programmer, one commit per step. I set the design, rules and model
-choice, reviewed every eval failure and every reply via its English version, and ran the live and crash tests.
+**AI tools.** Built with Claude Code.
 
 ## Reliability
 
@@ -65,6 +64,8 @@ human) fixed it; 8 new probe tickets then passed 8/8.
 ## What I would improve
 
 **Next:** add the probes and risky cases (P1 outage, security, injection, card number) as a labelled regression set;
-a 10-example eval scored 100% on a prompt that was unsafe. In production: webhooks instead of polling, and a paid or
-local model, since free-tier data may be used for training. **Client rules:** add "outages affecting many users
+a 10-example eval scored 100% on a prompt that was unsafe. Check the English versions against an independent
+translator, not the same model. In production: retrieval (RAG) once the help centre and rules grow beyond what fits
+in a prompt; with 12 entries the full text (about 2,000 tokens) goes into every call and no entry can be missed.
+Also webhooks instead of polling, and a paid or local model, since free-tier data may be used for training. **Client rules:** add "outages affecting many users
 always go to a human"; the rules omit the most urgent case, and the status-page entry tempted the agent to answer.
