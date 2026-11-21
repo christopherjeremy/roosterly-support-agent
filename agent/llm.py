@@ -19,8 +19,9 @@ from agent.schema import Decision
 
 logger = logging.getLogger(__name__)
 
-MAX_ATTEMPTS = 5
+MAX_ATTEMPTS = 6
 BACKOFF_BASE_SECONDS = 2.0
+MAX_WAIT_SECONDS = 60.0
 REQUEST_TIMEOUT_SECONDS = 120
 RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
@@ -67,7 +68,7 @@ class DecisionModel:
             except errors.APIError as exc:
                 if exc.code not in RETRYABLE_STATUS:
                     raise
-                self._wait_before_retry(attempt, f"{exc.code} {exc.status}")
+                self._wait_before_retry(attempt, f"{exc.code} {exc.status}", self._suggested_delay(exc))
                 continue
             except (httpx.TimeoutException, httpx.TransportError) as exc:
                 self._wait_before_retry(attempt, type(exc).__name__)
@@ -77,12 +78,26 @@ class DecisionModel:
 
         raise AssertionError("unreachable: the loop either returns or raises")
 
-    def _wait_before_retry(self, attempt: int, reason: str) -> None:
+    def _wait_before_retry(self, attempt: int, reason: str, suggested: float | None = None) -> None:
         if attempt == MAX_ATTEMPTS:
             raise ModelUnavailable(f"{self._model}: {reason} after {attempt} attempts")
-        wait = BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
+        backoff = BACKOFF_BASE_SECONDS * 2 ** (attempt - 1)
+        wait = min(max(backoff, suggested or 0.0), MAX_WAIT_SECONDS)
         logger.warning("Model %s: %s, retry %d in %.0fs", self._model, reason, attempt, wait)
         self._sleep(wait)
+
+    @staticmethod
+    def _suggested_delay(exc: errors.APIError) -> float | None:
+        """Gemini rate-limit errors include a RetryInfo entry such as {"retryDelay": "34s"}."""
+        details = (exc.details or {}).get("error", {}).get("details", []) if isinstance(exc.details, dict) else []
+        for item in details:
+            delay = str(item.get("retryDelay", ""))
+            if delay.endswith("s"):
+                try:
+                    return float(delay[:-1])
+                except ValueError:
+                    return None
+        return None
 
     @staticmethod
     def _parse(response) -> Decision:

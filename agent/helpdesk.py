@@ -158,3 +158,17 @@ class HelpdeskClient:
     def get_ticket(self, ticket_id: str) -> dict:
         """One ticket, including how it was handled if it already was."""
         return self._request("GET", f"/tickets/{ticket_id}")
+
+    def is_handled(self, ticket_id: str) -> bool:
+        """Whether the helpdesk already holds a decision for this ticket."""
+        return self.get_ticket(ticket_id).get("handled") is not None
+
+    def send_decision(self, ticket_id: str, action: str, payload: dict) -> dict:
+        """POST a reply, handoff or close. Raises HelpdeskOutcomeUnknown if the outcome cannot be known."""
+        if action not in ("reply", "handoff", "close"):
+            raise ValueError(f"unknown action {action!r}")
+        return self._request("POST", f"/tickets/{ticket_id}/{action}", json=payload)
+
+    def reset_practice(self) -> dict:
+        """Re-open all practice tickets."""
+        return self._request("POST", "/practice/reset")
