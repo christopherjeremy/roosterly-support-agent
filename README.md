@@ -67,11 +67,9 @@ human) fixed it; 8 new probe tickets then passed 8/8.
 
 ## What I would improve
 
-**Next:** add the probes and risky cases (P1 outage, security, injection, card number) as a labelled regression set;
-a 10-example eval scored 100% on a prompt that was unsafe. Check the English versions against an independent
-translator. In production: retrieval (RAG) once the help centre outgrows the prompt; today all 12 entries fit
-(about 2,400 tokens per call, measured), so none can be missed. Also webhooks instead of polling, and a paid or
-local model, since free-tier data may be used for training.
+**Next step:** a labelled regression set with the probes and risky cases (P1 outage, security, injection, card
+number), because the 10-example eval scored 100% on a prompt that was unsafe. Later: an independent translation
+check, and retrieval (RAG) once the help centre outgrows the prompt.
 
-**Client rules:** add "outages affecting many users always go to a human"; the rules omit the most urgent case, and
-the status-page entry tempted the agent to answer.
+**Client rules:** add "outages affecting many users always go to a human"; the status-page entry tempted the agent
+to answer one.
