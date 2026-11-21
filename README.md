@@ -49,8 +49,8 @@ only in a git-ignored `.env`; payment data masked before the model and in all ou
 ## Eval and fix
 
 `eval.py` scores the full agent on the 10 examples from `GET /examples` (labels fetched at run time, never stored).
-Three runs each; "After" is the final code. In "Before", one run lost an example to a Gemini outage; one earlier
-"after" run rated E10 P3 instead of P4, so priority can vary on borderline cases.
+Three runs each, "After" on the final code. One "Before" run lost an example to a Gemini outage; priority can
+vary on borderline cases (one earlier run rated E10 P3, not P4).
 
 | | language | category | priority | action | safety | handoffs (labels 30%) |
 |---|---|---|---|---|---|---|
@@ -69,10 +69,9 @@ human) fixed it; 8 new probe tickets then passed 8/8.
 
 **Next:** add the probes and risky cases (P1 outage, security, injection, card number) as a labelled regression set;
 a 10-example eval scored 100% on a prompt that was unsafe. Check the English versions against an independent
-translator, not the same model. In production: retrieval (RAG) once the help centre and rules grow beyond what fits
-in a prompt; with 12 entries the whole help centre goes into every call (about 2,400 tokens per prompt, measured)
-and no entry can be missed. Also webhooks instead of polling, and a paid or local model, since free-tier data may
-be used for training.
+translator. In production: retrieval (RAG) once the help centre outgrows the prompt; today all 12 entries fit
+(about 2,400 tokens per call, measured), so none can be missed. Also webhooks instead of polling, and a paid or
+local model, since free-tier data may be used for training.
 
 **Client rules:** add "outages affecting many users always go to a human"; the rules omit the most urgent case, and
 the status-page entry tempted the agent to answer.
