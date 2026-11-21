@@ -1,4 +1,4 @@
-google-genai
-httpx
-pydantic
-python-dotenv
+google-genai==3.6.1
+httpx==0.28.1
+pydantic==2.14.4
+python-dotenv==1.2.4
