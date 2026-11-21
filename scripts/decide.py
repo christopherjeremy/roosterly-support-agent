@@ -15,6 +15,7 @@ from dataclasses import replace
 from agent.config import load_settings
 from agent.helpdesk import HelpdeskClient
 from agent.llm import DecisionModel
+from agent.pipeline import TicketDecider
 
 
 def main() -> None:
@@ -29,16 +30,19 @@ def main() -> None:
     settings = load_settings(require_llm=True)
     if args.model:
         settings = replace(settings, model=args.model)
-    model = DecisionModel(settings, thinking_level=args.thinking)
+    decider = TicketDecider(DecisionModel(settings, thinking_level=args.thinking))
 
     with HelpdeskClient(settings) as helpdesk:
         for ticket_id in args.ticket_ids:
             ticket = helpdesk.get_ticket(ticket_id)
-            decision, usage = model.decide(ticket)
+            outcome = decider.decide(ticket)
+            decision, usage = outcome.decision, outcome.usage
             print(f"[{ticket['id']}] {ticket['subject']}")
             print(f"  {decision.language} / {decision.category} / {decision.priority} / {decision.action}"
                   f"  (confidence {decision.confidence}, rule {decision.handoff_rule}, faq {decision.faq_ids})")
             print(f"  Reason:  {decision.reason}")
+            if outcome.overrides:
+                print(f"  Safety:  {'; '.join(outcome.overrides)}")
             print(f"  Ticket:  {decision.ticket_en}")
             if decision.action == "reply":
                 print(f"  Reply:   {decision.draft_reply}")
