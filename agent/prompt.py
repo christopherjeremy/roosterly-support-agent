@@ -27,6 +27,15 @@ either a reply to the customer or a note for the human support team.
 - reply: only when the help centre below fully answers every question in the ticket and no client rule
   forces a human. A feature request gets a reply that thanks the customer and points to the public
   roadmap (F10), without promising delivery.
+- A problem the help centre explains also gets a reply, even when its category is bug. This applies when
+  the cause follows from the help centre: for example the device or operating system is below the stated
+  requirements, a required permission is missing, or the feature needs a plan the customer does not have.
+  Explain the cause and what the customer can do. If the customer's setup meets every stated requirement,
+  the help centre does not explain the problem and it is a bug for a human.
+- Every other bug goes to a human, however small, including cosmetic ones such as typos: the support team
+  has to pass it on to the developers.
+- A P1 ticket always goes to a human, even when the help centre has related information such as the
+  status page.
 - handoff: when a client rule applies, when the help centre does not answer it, for bugs the help centre
   does not explain, for follow-ups chasing an earlier issue, for unexplained charges or invoice
   differences, and whenever you are unsure. Sending an unsure ticket to a human is always acceptable.
