@@ -13,7 +13,7 @@ If the model is unavailable, the ticket is left open and reported, so the next r
 
 import json
 import logging
-import time
+import os
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -26,7 +26,7 @@ from agent.schema import Decision
 
 logger = logging.getLogger(__name__)
 
-LOG_PATH = Path(__file__).resolve().parent.parent / "logs" / "agent.log"
+LOG_PATH = Path(os.getenv("AGENT_LOG_PATH") or Path(__file__).resolve().parent.parent / "logs" / "agent.log")
 MAX_SEND_ATTEMPTS = 3
 
 
