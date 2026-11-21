@@ -20,16 +20,19 @@ cp .env.example .env                       # helpdesk key, email, name; free Gem
 1. **Dutch directly, checked in English.** One Gemini call per ticket returns a schema-validated decision, the reply
    in the customer's language, and English versions of ticket and reply. No translation step, so no meaning lost
    twice. The English comes from the same model, so the decisions are checked against Nordavo's labels and
-   hand-written probe tickets; an independent translation check is not done yet (see below). `gemini-3.5-flash-lite` (free) was chosen by measurement: it matched or beat
-   `gemini-3.6-flash` on every eval field at ~2 s instead of ~35 s per ticket, within quota.
+   hand-written probe tickets; an independent translation check is not done yet (listed under What I would
+   improve). `gemini-3.5-flash-lite` (free) was chosen by measurement: it matched or beat `gemini-3.6-flash` on
+   every eval field at ~2 s instead of ~35 s per ticket, within quota.
 2. **Safety in code, one-directional.** Card numbers, IBANs, CVCs and expiry dates are masked before the model sees
    the ticket. Afterwards, code can turn a reply into a handoff, never the reverse: payment details, P1, a client
    rule (flagged by the model or matched by nl/en/de keyword), no help-centre citation, confidence < 0.7, or a link
-   to a host not in `faq.md`. Injected instructions in tickets are ignored and noted for the human.
+   to a host not in `faq.md`. Injected instructions in tickets are ignored; if the ticket is handed off, the note
+   mentions them.
 3. **The helpdesk is the source of truth.** Only open tickets are processed, each re-checked just before sending. A
    local state file would go stale after a practice reset.
 
-**Assumptions.** Unsure = no help-centre entry, confidence < 0.7 or invalid output. Multi-question tickets get a reply
+**Assumptions.** Unsure = no help-centre entry or confidence < 0.7, which means a handoff; if the model gives no
+valid answer, the ticket stays open for the next run instead of being guessed. Multi-question tickets get a reply
 only if every part is covered; otherwise the handoff note gives the open issue, then the covered answer. Follow-ups,
 unexplained bugs (also cosmetic), unexplained charges, payment details and every P1 go to a human.
 
@@ -46,7 +49,8 @@ only in a git-ignored `.env`; payment data masked before the model and in all ou
 ## Eval and fix
 
 `eval.py` scores the full agent on the 10 examples from `GET /examples` (labels fetched at run time, never stored).
-Three runs each:
+Three runs each; "After" is the final code. In "Before", one run lost an example to a Gemini outage; one earlier
+"after" run rated E10 P3 instead of P4, so priority can vary on borderline cases.
 
 | | language | category | priority | action | safety | handoffs (labels 30%) |
 |---|---|---|---|---|---|---|
@@ -67,6 +71,8 @@ human) fixed it; 8 new probe tickets then passed 8/8.
 a 10-example eval scored 100% on a prompt that was unsafe. Check the English versions against an independent
 translator, not the same model. In production: retrieval (RAG) once the help centre and rules grow beyond what fits
 in a prompt; with 12 entries the whole help centre goes into every call (about 2,400 tokens per prompt, measured)
-and no entry can be missed.
-Also webhooks instead of polling, and a paid or local model, since free-tier data may be used for training. **Client rules:** add "outages affecting many users
-always go to a human"; the rules omit the most urgent case, and the status-page entry tempted the agent to answer.
+and no entry can be missed. Also webhooks instead of polling, and a paid or local model, since free-tier data may
+be used for training.
+
+**Client rules:** add "outages affecting many users always go to a human"; the rules omit the most urgent case, and
+the status-page entry tempted the agent to answer.
