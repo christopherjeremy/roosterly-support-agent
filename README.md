@@ -66,6 +66,7 @@ human) fixed it; 8 new probe tickets then passed 8/8.
 **Next:** add the probes and risky cases (P1 outage, security, injection, card number) as a labelled regression set;
 a 10-example eval scored 100% on a prompt that was unsafe. Check the English versions against an independent
 translator, not the same model. In production: retrieval (RAG) once the help centre and rules grow beyond what fits
-in a prompt; with 12 entries the full text (about 2,000 tokens) goes into every call and no entry can be missed.
+in a prompt; with 12 entries the whole help centre goes into every call (about 2,400 tokens per prompt, measured)
+and no entry can be missed.
 Also webhooks instead of polling, and a paid or local model, since free-tier data may be used for training. **Client rules:** add "outages affecting many users
 always go to a human"; the rules omit the most urgent case, and the status-page entry tempted the agent to answer.
